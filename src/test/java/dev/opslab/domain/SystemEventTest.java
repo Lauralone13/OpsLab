@@ -9,7 +9,6 @@ class SystemEventTest {
 
     @Test
     void shouldCreateSystemEventWithValidData() {
-
         // Arrange
         LocalDateTime timestamp = LocalDateTime.of(2026, 9, 20, 20, 35);
 
@@ -25,13 +24,67 @@ class SystemEventTest {
 
     @Test
     void shouldRejectBlankService() {
-
         // Arrange
         LocalDateTime timestamp = LocalDateTime.of(2026, 9, 20, 20, 35);
 
+        // Act & Assert
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new SystemEvent("", Severity.ERROR, "Database connection failed", timestamp));
     }
 
+    @Test
+    void shouldRejectNullService() {
+        // Arrange
+        LocalDateTime timestamp = LocalDateTime.of(2026, 9, 20, 20, 35);
+
+        // Act & Assert
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> new SystemEvent(null, Severity.ERROR, "Database connection failed", timestamp)
+        );
+
+        assertEquals("Service must not be blank", exception.getMessage());
+    }
+
+    @Test
+    void shouldRejectNullSeverity() {
+        // Arrange
+        LocalDateTime timestamp = LocalDateTime.of(2026, 9, 20, 20, 35);
+
+        // Act & Assert
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new SystemEvent("payment-service", null, "Database connection failed", timestamp));
+    }
+
+    @Test
+    void shouldRejectBlankMessage() {
+        // Arrange
+        LocalDateTime timestamp = LocalDateTime.of(2026, 9, 20, 20, 35);
+
+        // Act & Assert
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new SystemEvent("payment-service", Severity.ERROR, "", timestamp));
+    }
+
+    @Test
+    void shouldRejectNullMessage() {
+        // Arrange
+        LocalDateTime timestamp = LocalDateTime.of(2026, 9, 20, 20, 35);
+
+        // Act & Assert
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new SystemEvent("payment-service", Severity.ERROR, null, timestamp));
+    }
+
+    @Test
+    void shouldRejectNullTimestamp() {
+        // Act & Assert
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new SystemEvent("payment-service", Severity.WARNING, "Database connection failed", null));
+    }
 }
