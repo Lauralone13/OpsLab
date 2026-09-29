@@ -4,15 +4,15 @@ import java.time.LocalDateTime;
 
 public class SystemEvent {
 
-    private final String service;
+    private final MonitoredService service;
     private final Severity severity;
     private final String message;
     private final LocalDateTime timestamp;
 
-    public SystemEvent(String service, Severity severity, String message, LocalDateTime timestamp) {
+    public SystemEvent(MonitoredService service, Severity severity, String message, LocalDateTime timestamp) {
 
-        if (service == null || service.isBlank()) {
-            throw new IllegalArgumentException("Service must not be blank");
+        if (service == null) {
+            throw new IllegalArgumentException("Service must not be null");
         }
 
         if (severity == null) {
@@ -33,7 +33,7 @@ public class SystemEvent {
         this.timestamp = timestamp;
     }
 
-    public String getService() {
+    public MonitoredService getService() {
         return service;
     }
 
