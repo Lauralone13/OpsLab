@@ -85,4 +85,80 @@ public class SystemEventRepositoryTest {
 
         assertEquals(1, repository.getAllEvents().size());
     }
+
+    @Test
+    void shouldReturnEventsWithWantedSeverity() {
+        SystemEventRepository repository = new SystemEventRepository();
+        LocalDateTime timestamp = LocalDateTime.of(2026, 9, 20, 20, 35);
+        MonitoredService service = new MonitoredService("payment-service", "Processes customer payments");
+        SystemEvent event1 = new SystemEvent(service, Severity.ERROR, "ErrorMessage", timestamp);
+        SystemEvent event2 = new SystemEvent(service, Severity.WARNING, "WarningMessage", timestamp);
+        SystemEvent event3 = new SystemEvent(service, Severity.INFO, "InformationMessage", timestamp);
+        SystemEvent event4 = new SystemEvent(service, Severity.ERROR, "ErrorMessage", timestamp);
+        SystemEvent event5 = new SystemEvent(service, Severity.ERROR, "ErrorMessage", timestamp);
+        SystemEvent event6 = new SystemEvent(service, Severity.WARNING, "WarningMessage", timestamp);
+
+        repository.addEvent(event1);
+        repository.addEvent(event2);
+        repository.addEvent(event3);
+        repository.addEvent(event4);
+        repository.addEvent(event5);
+        repository.addEvent(event6);
+
+        List<SystemEvent> errorEvents = repository.findEventsBySeverity(Severity.ERROR);
+
+        assertEquals(3, errorEvents.size());
+        assertTrue(errorEvents.contains(event1));
+        assertTrue(errorEvents.contains(event4));
+        assertTrue(errorEvents.contains(event5));
+    }
+
+    @Test
+    void shouldFindNothingAndReturnAnEmptyListWhenWantedSeverityIsNotFound() {
+        SystemEventRepository repository = new SystemEventRepository();
+        LocalDateTime timestamp = LocalDateTime.of(2026, 9, 20, 20, 35);
+        MonitoredService service = new MonitoredService("payment-service", "Processes customer payments");
+        SystemEvent event1 = new SystemEvent(service, Severity.WARNING, "WarningMessage", timestamp);
+        SystemEvent event2 = new SystemEvent(service, Severity.INFO, "InformationMessage", timestamp);
+
+        repository.addEvent(event1);
+        repository.addEvent(event2);
+
+        List<SystemEvent> errorEvents =
+                repository.findEventsBySeverity(Severity.ERROR);
+
+        assertTrue(errorEvents.isEmpty());
+    }
+
+    @Test
+    void shouldRejectNullSeverityWhenFiltering() {
+        SystemEventRepository repository = new SystemEventRepository();
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> repository.findEventsBySeverity(null)
+        );
+
+        assertEquals("Severity must not be null", exception.getMessage());
+    }
+
+    @Test
+    void shouldProtectEventsFoundBySeverityFromExternalModification() {
+        SystemEventRepository repository = new SystemEventRepository();
+        LocalDateTime timestamp = LocalDateTime.of(2026, 9, 20, 20, 35);
+        MonitoredService service = new MonitoredService("payment-service", "Processes customer payments");
+        SystemEvent event = new SystemEvent(service, Severity.ERROR, "Database connection failed", timestamp);
+
+        repository.addEvent(event);
+        List<SystemEvent> returnedEvents = repository.findEventsBySeverity(Severity.ERROR);
+
+        assertEquals(1, returnedEvents.size());
+
+        assertThrows(
+                UnsupportedOperationException.class,
+                returnedEvents::clear
+        );
+
+        assertEquals(1, repository.findEventsBySeverity(Severity.ERROR).size());
+    }
 }
