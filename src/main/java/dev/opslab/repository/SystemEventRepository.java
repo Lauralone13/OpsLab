@@ -1,5 +1,6 @@
 package dev.opslab.repository;
 
+import dev.opslab.domain.MonitoredService;
 import dev.opslab.domain.Severity;
 import dev.opslab.domain.SystemEvent;
 import java.util.ArrayList;
@@ -28,6 +29,16 @@ public class SystemEventRepository {
 
         return events.stream()
                 .filter(event -> event.getSeverity() == severity)
+                .toList();
+    }
+
+    public List<SystemEvent> findEventsByService(MonitoredService service) {
+        if (service == null) {
+            throw new IllegalArgumentException("Service must not be null");
+        }
+
+        return events.stream()
+                .filter(event -> event.getService().equals(service))
                 .toList();
     }
 }

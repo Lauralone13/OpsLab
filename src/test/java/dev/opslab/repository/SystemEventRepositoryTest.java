@@ -161,4 +161,89 @@ public class SystemEventRepositoryTest {
 
         assertEquals(1, repository.findEventsBySeverity(Severity.ERROR).size());
     }
+
+    @Test
+    void shouldReturnEventsForWantedService() {
+        SystemEventRepository repository = new SystemEventRepository();
+        LocalDateTime timestamp = LocalDateTime.of(2026, 9, 20, 20, 35);
+        MonitoredService paymentService = new MonitoredService("payment-service", "Processes customer payments");
+        MonitoredService otherService = new MonitoredService("other-service", "Other customer service");
+
+        SystemEvent event1 = new SystemEvent(paymentService, Severity.ERROR, "ErrorMessage", timestamp);
+        SystemEvent event2 = new SystemEvent(paymentService, Severity.WARNING, "WarningMessage", timestamp);
+        SystemEvent event3 = new SystemEvent(paymentService, Severity.INFO, "InformationMessage", timestamp);
+        SystemEvent event4 = new SystemEvent(otherService, Severity.ERROR, "ErrorMessage", timestamp);
+        SystemEvent event5 = new SystemEvent(otherService, Severity.ERROR, "ErrorMessage", timestamp);
+        SystemEvent event6 = new SystemEvent(otherService, Severity.WARNING, "WarningMessage", timestamp);
+
+        repository.addEvent(event1);
+        repository.addEvent(event2);
+        repository.addEvent(event3);
+        repository.addEvent(event4);
+        repository.addEvent(event5);
+        repository.addEvent(event6);
+
+        MonitoredService searchedService = new MonitoredService("payment-service", "Completely different description");
+
+        List<SystemEvent> returnedEvents = repository.findEventsByService(searchedService);
+
+        assertEquals(3, returnedEvents.size());
+        assertTrue(returnedEvents.contains(event1));
+        assertTrue(returnedEvents.contains(event2));
+        assertTrue(returnedEvents.contains(event3));
+    }
+
+    @Test
+    void shouldFindNothingAndReturnAnEmptyListWhenWantedServiceIsNotFound() {
+        SystemEventRepository repository = new SystemEventRepository();
+        LocalDateTime timestamp = LocalDateTime.of(2026, 9, 20, 20, 35);
+        MonitoredService otherService = new MonitoredService("other-service", "other customer service");
+        SystemEvent event1 = new SystemEvent(otherService, Severity.WARNING, "WarningMessage", timestamp);
+        SystemEvent event2 = new SystemEvent(otherService, Severity.INFO, "InformationMessage", timestamp);
+
+        repository.addEvent(event1);
+        repository.addEvent(event2);
+
+        MonitoredService searchedService = new MonitoredService("payment-service", "Completely different description");
+
+        List<SystemEvent> returnedEvents =
+                repository.findEventsByService(searchedService);
+
+        assertTrue(returnedEvents.isEmpty());
+    }
+
+    @Test
+    void shouldRejectNullServiceWhenFiltering() {
+        SystemEventRepository repository = new SystemEventRepository();
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> repository.findEventsByService(null)
+        );
+
+        assertEquals("Service must not be null", exception.getMessage());
+    }
+
+    @Test
+    void shouldProtectEventsFoundByServiceFromExternalModification() {
+        SystemEventRepository repository = new SystemEventRepository();
+        LocalDateTime timestamp = LocalDateTime.of(2026, 9, 20, 20, 35);
+        MonitoredService service = new MonitoredService("payment-service", "Processes customer payments");
+        SystemEvent event = new SystemEvent(service, Severity.ERROR, "Database connection failed", timestamp);
+
+        repository.addEvent(event);
+
+        MonitoredService searchedService = new MonitoredService("payment-service", "Completely different description");
+
+        List<SystemEvent> returnedEvents = repository.findEventsByService(searchedService);
+
+        assertEquals(1, returnedEvents.size());
+
+        assertThrows(
+                UnsupportedOperationException.class,
+                returnedEvents::clear
+        );
+
+        assertEquals(1, repository.findEventsByService(searchedService).size());
+    }
 }
