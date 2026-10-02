@@ -2,8 +2,10 @@ package dev.opslab.domain;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class MonitoredServiceTest {
 
@@ -120,5 +122,38 @@ class MonitoredServiceTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> service.setDescription("  "));
+    }
+
+    @Test
+    void shouldBeEqualAndHaveSameHashCodeWhenNamesAreEqual() {
+        MonitoredService service1 = new MonitoredService("payment-service", "Processes customer payments");
+        MonitoredService service2 = new MonitoredService("payment-service", "Another description");
+
+        service2.markAvailable();
+
+        assertEquals(service1, service2);
+        assertEquals(service1.hashCode(), service2.hashCode());
+    }
+
+    @Test
+    void shouldNotBeEqualWhenNamesAreDifferent() {
+        MonitoredService service1 = new MonitoredService("payment-service", "Processes customer payments");
+        MonitoredService service2 = new MonitoredService("other-service", "Another description");
+
+        assertNotEquals(service1, service2);
+    }
+
+    @Test
+    void shouldNotBeEqualToNull() {
+        MonitoredService service = new MonitoredService("payment-service", "Processes customer payments");
+
+        assertFalse(service.equals(null));
+    }
+
+    @Test
+    void shouldNotBeEqualToObjectOfDifferentType() {
+        MonitoredService service = new MonitoredService("payment-service", "Processes customer payments");
+
+        assertFalse(service.equals("payment-service"));
     }
 }

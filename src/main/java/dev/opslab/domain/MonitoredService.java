@@ -49,4 +49,24 @@ public class MonitoredService {
             throw new IllegalArgumentException("Description must not be blank");
         }
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (!(obj instanceof MonitoredService)) {
+            return false;
+        }
+
+        MonitoredService other = (MonitoredService) obj;
+
+        return this.name.equals(other.getName());
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
+    }
 }
