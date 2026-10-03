@@ -246,4 +246,56 @@ public class SystemEventRepositoryTest {
 
         assertEquals(1, repository.findEventsByService(searchedService).size());
     }
+
+    @Test
+    void shouldReturnEventsSortedChronologically() {
+        SystemEventRepository repository = new SystemEventRepository();
+        MonitoredService paymentService = new MonitoredService("payment-service", "Processes customer payments");
+        MonitoredService otherService = new MonitoredService("other-service", "Other customer service");
+
+        SystemEvent event1 = new SystemEvent(paymentService, Severity.ERROR, "ErrorMessage", LocalDateTime.of(2026, 9, 20, 10, 6));
+        SystemEvent event2 = new SystemEvent(otherService, Severity.WARNING, "WarningMessage", LocalDateTime.of(2026, 9, 13, 14, 35));
+        SystemEvent event3 = new SystemEvent(paymentService, Severity.INFO, "InformationMessage", LocalDateTime.of(2026, 9, 13, 21, 45));
+        SystemEvent event4 = new SystemEvent(otherService, Severity.ERROR, "ErrorMessage", LocalDateTime.of(2026, 8, 27, 17, 26));
+
+        repository.addEvent(event1);
+        repository.addEvent(event2);
+        repository.addEvent(event3);
+        repository.addEvent(event4);
+
+        List<SystemEvent> sortedEvents = repository.getEventsChronologically();
+
+        assertEquals(4, sortedEvents.size());
+        assertEquals(event4, sortedEvents.get(0));
+        assertEquals(event2, sortedEvents.get(1));
+        assertEquals(event3, sortedEvents.get(2));
+        assertEquals(event1, sortedEvents.get(3));
+    }
+
+    @Test
+    void shouldNotChangeStoredEventOrderWhenReturningEventsChronologically() {
+        SystemEventRepository repository = new SystemEventRepository();
+        MonitoredService paymentService = new MonitoredService("payment-service", "Processes customer payments");
+        MonitoredService otherService = new MonitoredService("other-service", "Other customer service");
+
+        SystemEvent event1 = new SystemEvent(paymentService, Severity.ERROR, "ErrorMessage", LocalDateTime.of(2026, 9, 20, 10, 6));
+        SystemEvent event2 = new SystemEvent(otherService, Severity.WARNING, "WarningMessage", LocalDateTime.of(2026, 9, 13, 14, 35));
+        SystemEvent event3 = new SystemEvent(paymentService, Severity.INFO, "InformationMessage", LocalDateTime.of(2026, 9, 13, 21, 45));
+        SystemEvent event4 = new SystemEvent(otherService, Severity.ERROR, "ErrorMessage", LocalDateTime.of(2026, 8, 27, 17, 26));
+
+        repository.addEvent(event1);
+        repository.addEvent(event2);
+        repository.addEvent(event3);
+        repository.addEvent(event4);
+
+        repository.getEventsChronologically();
+
+        List<SystemEvent> storedEvents = repository.getAllEvents();
+
+        assertEquals(4, storedEvents.size());
+        assertEquals(event1, storedEvents.get(0));
+        assertEquals(event2, storedEvents.get(1));
+        assertEquals(event3, storedEvents.get(2));
+        assertEquals(event4, storedEvents.get(3));
+    }
 }

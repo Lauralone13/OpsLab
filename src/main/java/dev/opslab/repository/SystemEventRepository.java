@@ -4,6 +4,7 @@ import dev.opslab.domain.MonitoredService;
 import dev.opslab.domain.Severity;
 import dev.opslab.domain.SystemEvent;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class SystemEventRepository {
@@ -39,6 +40,12 @@ public class SystemEventRepository {
 
         return events.stream()
                 .filter(event -> event.getService().equals(service))
+                .toList();
+    }
+
+    public List<SystemEvent> getEventsChronologically() {
+        return events.stream()
+                .sorted(Comparator.comparing(SystemEvent::getTimestamp))
                 .toList();
     }
 }
